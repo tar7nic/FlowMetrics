@@ -348,15 +348,13 @@ def compute_kpi_rollups(df_orders):
 
 
 # ─────────────────────────────────────────
-# STEP 6: SAVE AS PARQUET
+# STEP 6: SAVE AS CSV (No winutils)
 # ─────────────────────────────────────────
-def save_parquet(
-    df_orders, df_customers, df_products,
-    df_supplier_metrics, df_monthly, df_regional, df_shipping,
-    out_dir: str
-):
+def save_parquet(df_orders, df_customers, df_products,
+                 df_supplier_metrics, df_monthly, df_regional,
+                 df_shipping, out_dir: str):
     print("\n" + "="*60)
-    print("STEP 6: Saving to Parquet")
+    print("STEP 6: Saving Processed Files (CSV format)")
     print("="*60)
 
     outputs = {
@@ -370,30 +368,45 @@ def save_parquet(
     }
 
     for name, df in outputs.items():
-        path = os.path.join(out_dir, name)
-        df.coalesce(1).write.mode("overwrite").parquet(path)
-        print(f"   ✅ Saved → {path}/")
-
-    print(f"\n   All parquet files saved to: {out_dir}/")
+        # Convert to Pandas and save — completely avoids Hadoop/winutils
+        out_path = os.path.join(out_dir, f"{name}.csv")
+        try:
+            df.toPandas().to_csv(out_path, index=False)
+            print(f"   ✅ Saved → {out_path}")
+        except Exception as e:
+            print(f"   ❌ Failed to save {name}: {e}")
+            raise
 
 
 # ─────────────────────────────────────────
-# STEP 7: QUICK VALIDATION
+# STEP 7: VALIDATE SAVED FILES
 # ─────────────────────────────────────────
 def validate_parquet(spark: SparkSession, out_dir: str):
     print("\n" + "="*60)
-    print("STEP 7: Validating Parquet Files")
+    print("STEP 7: Validating Saved Files")
     print("="*60)
+
+    import pandas as pd
 
     tables = [
         "orders", "customers", "products",
         "supplier_metrics", "kpi_monthly", "kpi_regional", "kpi_shipping"
     ]
 
+    all_good = True
     for name in tables:
-        path = os.path.join(out_dir, name)
-        df   = spark.read.parquet(path)
-        print(f"   ✅ {name:<20} {df.count():>8,} rows | {len(df.columns):>3} cols")
+        path = os.path.join(out_dir, f"{name}.csv")
+        try:
+            df    = pd.read_csv(path)
+            nulls = df.isnull().sum().sum()
+            print(f"   ✅ {name:<22} {df.shape[0]:>8,} rows | {df.shape[1]:>3} cols | {nulls} nulls")
+        except Exception as e:
+            print(f"   ❌ {name} failed: {e}")
+            all_good = False
+
+    if all_good:
+        print("\n   ✅ All files validated successfully")
+    return all_good
 
 
 # ─────────────────────────────────────────
