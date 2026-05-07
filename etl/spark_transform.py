@@ -350,32 +350,47 @@ def compute_kpi_rollups(df_orders):
 # ─────────────────────────────────────────
 # STEP 6: SAVE AS CSV (No winutils)
 # ─────────────────────────────────────────
-def save_parquet(df_orders, df_customers, df_products,
-                 df_supplier_metrics, df_monthly, df_regional,
-                 df_shipping, out_dir: str):
+import os
+
+def save_processed_csv(df_orders, df_customers, df_products,
+                      df_supplier_metrics, df_monthly, df_regional,
+                      df_shipping, out_dir: str):
+    """
+    Saves processed DataFrames as clean CSVs using Pandas to bypass 
+    Hadoop/winutils requirements on Windows.
+    """
     print("\n" + "="*60)
-    print("STEP 6: Saving Processed Files (CSV format)")
+    print("STEP 6: Saving Processed Files (Pandas CSV Mode)")
     print("="*60)
 
     outputs = {
-        "orders"           : df_orders,
-        "customers"        : df_customers,
-        "products"         : df_products,
-        "supplier_metrics" : df_supplier_metrics,
-        "kpi_monthly"      : df_monthly,
-        "kpi_regional"     : df_regional,
-        "kpi_shipping"     : df_shipping,
+        "orders": df_orders,
+        "customers": df_customers,
+        "products": df_products,
+        "supplier_metrics": df_supplier_metrics,
+        "kpi_monthly": df_monthly,
+        "kpi_regional": df_regional,
+        "kpi_shipping": df_shipping,
     }
 
-    for name, df in outputs.items():
-        # Convert to Pandas and save — completely avoids Hadoop/winutils
+    # Ensure the output directory exists
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    for name, spark_df in outputs.items():
         out_path = os.path.join(out_dir, f"{name}.csv")
         try:
-            df.toPandas().to_csv(out_path, index=False)
+            # .toPandas() brings the data into local memory
+            # .to_csv() writes a single, clean file that Streamlit/Pandas can read easily
+            print(f"   ⏳ Converting {name} to CSV...")
+            spark_df.toPandas().to_csv(out_path, index=False)
             print(f"   ✅ Saved → {out_path}")
         except Exception as e:
             print(f"   ❌ Failed to save {name}: {e}")
+            # We raise here because if 'orders.csv' fails, the Dashboard will crash later
             raise
+
+    print("\n✨ All files saved successfully.")
 
 
 # ─────────────────────────────────────────
@@ -422,7 +437,7 @@ if __name__ == "__main__":
 
     df_monthly, df_regional, df_shipping = compute_kpi_rollups(df_orders)
 
-    save_parquet(
+    save_processed_csv(
         df_orders, df_customers, df_products,
         df_supplier_metrics, df_monthly, df_regional, df_shipping,
         PROCESSED_DIR
