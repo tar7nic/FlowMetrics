@@ -9,19 +9,19 @@ A complete end-to-end supply chain analytics system built on the **DataCo Global
 [![View Full Dashboard PDF](https://img.shields.io/badge/Power%20BI-Full%20Dashboard-F2C811?logo=powerbi&logoColor=black)](assets/flowmetrics_dash.pdf)
 
 ### 📊 Executive Summary
-![Executive Summary](assets/dashboard/dashboard_page_1.png)
+![Executive Summary](assets/dashboard_page_1.png)
 
 ### 🏭 Supplier Performance
-![Supplier Performance](assets/dashboard/dashboard_page_2.png)
+![Supplier Performance](assets/dashboard_page_2.png)
 
 ### 📦 Inventory & Fulfillment
-![Inventory & Fulfillment](assets/dashboard/dashboard_page_3.png)
+![Inventory & Fulfillment](assets/dashboard_page_3.png)
 
 ### 💰 Cost & Risk
-![Cost & Risk](assets/dashboard/dashboard_page_4.png)
+![Cost & Risk](assets/dashboard_page_4.png)
 
 ### 🔄 Operations Overview
-![Operations Overview](assets/dashboard/dashboard_page_5.png)
+![Operations Overview](assets/dashboard_page_5.png)
 
 
 ---
@@ -103,6 +103,8 @@ FlowMetrics/
 ├── dashboard/
 │   └── app.py                        ← Streamlit dashboard
 │
+├── assets/                           ← Contains Dashboard Preview Images
+|
 ├── .gitignore
 ├── requirements.txt
 └── README.md
