@@ -1,0 +1,12 @@
+supplier_id,department_id,department_name
+1,2,Fitness
+2,4,Apparel
+3,5,Golf
+4,3,Footwear
+5,6,Outdoors
+6,7,Fan Shop
+7,10,Technology
+8,8,Book Shop
+9,9,Discs Shop
+10,11,Pet Shop
+11,12,Health And Beauty
